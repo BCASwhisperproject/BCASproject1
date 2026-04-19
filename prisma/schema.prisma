@@ -20,6 +20,7 @@ model User {
   streak      Int       @default(0)
   lastActive  DateTime?
   lastPostDate DateTime?
+  postsToday  Int   @default(0)
   createdAt   DateTime  @default(now())
 
   posts       Post[]
