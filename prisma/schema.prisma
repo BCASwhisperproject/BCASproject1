@@ -10,7 +10,7 @@ datasource db {
 
 // User id IS the Clerk userId — no mapping needed
 model User {
-  id          String    @id  // = Clerk userId
+  id          String    @id @default(cuid())
   email       String    @unique
   clerkId     String    @unique
   username    String    @unique
