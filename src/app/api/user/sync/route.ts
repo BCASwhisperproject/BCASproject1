@@ -16,7 +16,7 @@ export async function POST() {
     const adminIds = (process.env.ADMIN_CLERK_IDS ?? '').split(',').map(s => s.trim()).filter(Boolean)
     const isAdmin = adminIds.includes(userId)
 
-    let user = await prisma.user.findUnique({ where: { id: userId } })
+    let user = await prisma.user.findUnique({ where: { clerkId: userId } }) 
 
     if (!user) {
       let username = generateUsername()
@@ -28,7 +28,7 @@ export async function POST() {
         attempts++
       }
       user = await prisma.user.create({
-        data: { id: userId, email, username, avatarColor: randomAvatarColor(), isAdmin, isApproved: isAdmin },
+        data: { id: userId, clerkId: userId, email, username, avatarColor: randomAvatarColor(), isAdmin, isApproved: isAdmin },
       })
     } else if (isAdmin && !user.isAdmin) {
       user = await prisma.user.update({ where: { id: userId }, data: { isAdmin: true, isApproved: true } })
