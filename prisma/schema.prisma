@@ -12,6 +12,7 @@ datasource db {
 model User {
   id          String    @id  // = Clerk userId
   email       String    @unique
+  clerkId     String    @unique
   username    String    @unique
   avatarColor String    @default("gradient-purple")
   isAdmin     Boolean   @default(false)
