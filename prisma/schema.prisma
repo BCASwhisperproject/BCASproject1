@@ -19,6 +19,7 @@ model User {
   isApproved  Boolean   @default(false)
   streak      Int       @default(0)
   lastActive  DateTime?
+  lastPostDate DateTime?
   createdAt   DateTime  @default(now())
 
   posts       Post[]
