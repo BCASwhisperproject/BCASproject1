@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// User id IS the Clerk userId — no mapping needed
+model User {
+  id          String    @id  // = Clerk userId
+  email       String    @unique
+  username    String    @unique
+  avatarColor String    @default("gradient-purple")
+  isAdmin     Boolean   @default(false)
+  isApproved  Boolean   @default(false)
+  streak      Int       @default(0)
+  lastActive  DateTime?
+  createdAt   DateTime  @default(now())
+
+  posts       Post[]
+  comments    Comment[]
+  likes       PostLike[]
+  reactions   PostReaction[]
+  votes       PollVote[]
+  nominations Nomination[]
+  reports     Report[]
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  category  Category
+  imageUrl  String?
+  imagePublicId String?
+  isPinned  Boolean  @default(false)
+  isHot     Boolean  @default(false)
+  hotScore  Int      @default(0)
+  isHidden  Boolean  @default(false)
+  adminNote String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  comments  Comment[]
+  likes     PostLike[]
+  reactions PostReaction[]
+  reports   Report[]
+
+  @@index([category, createdAt(sort: Desc)])
+  @@index([hotScore(sort: Desc)])
+  @@index([authorId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  body      String
+  createdAt DateTime @default(now())
+
+  postId   String
+  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt])
+}
+
+model PostLike {
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId])
+}
+
+model PostReaction {
+  postId    String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId])
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  reason    String
+  createdAt DateTime @default(now())
+
+  postId     String
+  post       Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter   User   @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, reporterId])
+}
+
+model Poll {
+  id          String      @id @default(cuid())
+  title       String
+  isPublished Boolean     @default(false)
+  expiresAt   DateTime
+  createdAt   DateTime    @default(now())
+  createdById String
+
+  options PollOption[]
+  votes   PollVote[]
+}
+
+model PollOption {
+  id        String @id @default(cuid())
+  text      String
+  sortOrder Int    @default(0)
+  pollId    String
+  poll      Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes     PollVote[]
+
+  @@index([pollId])
+}
+
+model PollVote {
+  pollId    String
+  userId    String
+  optionId  String
+  createdAt DateTime @default(now())
+
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@id([pollId, userId])
+}
+
+model PollRanking {
+  id         String   @id @default(cuid())
+  optionText String
+  pollTitle  String
+  voteCount  Int      @default(0)
+  rank       Int      @default(0)
+  archivedAt DateTime @default(now())
+}
+
+model Nomination {
+  id            String   @id @default(cuid())
+  submittedName String
+  note          String   @default("")
+  createdAt     DateTime @default(now())
+  submittedById String
+  submittedBy   User     @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+}
+
+enum Category {
+  love
+  confession
+  tea
+  bite
+  rateme
+  secret
+  news
+  other
+}
