@@ -82,7 +82,9 @@ export default function PostComposer({ dbUser, postsToday, onPost }: PostCompose
       <div className="rounded-2xl shadow-sm p-4" style={{ background: 'var(--surface)' }}>
         <div className="flex items-center gap-3 mb-3">
           <Avatar username={dbUser.username} avatarColor={dbUser.avatarColor} size={42} />
-          <button onClick={handleOpen}
+          <button 
+            data-composer-trigger
+            onClick={handleOpen}
             className="flex-1 rounded-full px-4 py-2.5 text-sm text-left transition-colors hover:border-[var(--accent)]"
             style={{ background: 'var(--surface2)', border: '1.5px solid var(--border)', color: 'var(--muted)' }}>
             💬 Share a whisper…
