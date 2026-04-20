@@ -55,7 +55,7 @@ export default function Topbar({ dbUser, onSearch, onNewPost }: TopbarProps) {
         {/* Right controls */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* Online */}
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[.78rem] font-semibold"
+          <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full border text-[.72rem] sm:text-[.78rem] font-semibold"
             style={{ background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--muted)' }}>
             <span className="w-2 h-2 rounded-full animate-pulse-dot" style={{ background: 'var(--green)' }} />
             {onlineCount} online

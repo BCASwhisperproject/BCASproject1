@@ -60,7 +60,9 @@ export default function FeedPage() {
       prevCountRef.current = list.length
       setPosts(list)
       setFiltered(list)
-    } catch {}
+    } catch (err){
+  console.error(err)
+}
     setFetchLoading(false)
   }, [activeFilter])
 
@@ -159,10 +161,29 @@ export default function FeedPage() {
           })()}
 
           {/* Poll — shown inline on mobile, sidebar on desktop */}
+          
           <div className="lg:hidden">
             <PollWidget dbUser={dbUser} />
           </div>
-
+          {/*streak */}
+          {dbUser.streak > 0 && (
+          <div
+            className="lg:hidden flex items-center gap-3 px-3 py-3 rounded-2xl shadow-sm"
+            style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', color: '#fff' }}
+          >
+            <span className="text-2xl animate-streak">🔥</span>
+            <div>
+              <div className="font-extrabold text-[1.05rem]" style={{ fontFamily: 'var(--font-display)' }}>
+                {dbUser.streak} day streak
+              </div>
+              <div className="text-[.75rem] opacity-80">Keep posting to maintain it!</div>
+            </div>
+          </div>
+            )}
+            {/*trending and nomination */}
+          <div className="xl:hidden">
+            <TrendingSidebar dbUser={dbUser} posts={posts} />
+          </div>
           {/* Post Composer */}
           <PostComposer dbUser={dbUser} postsToday={postsToday} onPost={handleNewPost} />
 
