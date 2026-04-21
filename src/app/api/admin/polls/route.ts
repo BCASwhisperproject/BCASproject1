@@ -41,10 +41,17 @@ export async function POST(req: NextRequest) {
 
   const poll = await prisma.poll.create({
     data: {
-      title, createdById: userId, expiresAt: midnight,
-      options: { create: options.filter(Boolean).map((text: string, i: number) => ({ text, sortOrder: i })) },
+    title,
+    createdById: userId,
+    expiresAt: midnight,
+    isPublished: true,
+    options: {
+      create: options
+        .filter(Boolean)
+        .map((text: string, i: number) => ({ text, sortOrder: i })),
     },
-    include: { options: true },
+   },
+  include: { options: true },
   })
   return NextResponse.json({ poll }, { status: 201 })
 }
