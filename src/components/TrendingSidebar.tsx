@@ -16,11 +16,13 @@ export default function TrendingSidebar({ dbUser, posts }: TrendingSidebarProps)
   const [nomName, setNomName] = useState('')
   const [nomNote, setNomNote] = useState('')
   const [nomLoading, setNomLoading] = useState(false)
-
+  
+  const startOfToday = new Date()
+    startOfToday.setHours(0, 0, 0, 0)
   const trending = [...posts]
     .map((p: any) => ({ ...p, score: p.likeCount * 2 + p.commentCount * 1.5 }))
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
+    .slice(0, 3)
 
   async function submitNomination() {
     if (!nomName.trim()) return
