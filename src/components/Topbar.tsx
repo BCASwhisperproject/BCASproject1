@@ -18,7 +18,7 @@ export default function Topbar({ dbUser, onSearch, onNewPost }: TopbarProps) {
   const [dark, setDark]       = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [termsOpen, setTermsOpen] = useState(false)
-  const [onlineCount] = useState(() => Math.floor(Math.random() * 30) + 8)
+  const [onlineCount] = useState(() => Math.floor(Math.random() * 80) + 8)
 
   useEffect(() => {
     const saved = localStorage.getItem('theme')
