@@ -29,7 +29,7 @@ export default function PollWidget({ dbUser }: PollWidgetProps) {
   useEffect(() => {
     fetchPoll()
     // Refresh every 30s for live updates
-    const interval = setInterval(fetchPoll, 30000)
+    const interval = setInterval(fetchPoll, 60000)
     return () => clearInterval(interval)
   }, [fetchPoll])
 

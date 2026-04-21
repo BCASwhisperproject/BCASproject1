@@ -68,9 +68,9 @@ export default function FeedPage() {
 
   useEffect(() => { if (dbUser?.isApproved || dbUser?.isAdmin) fetchPosts() }, [dbUser])
 
-  /* ── Real-time polling every 30s ── */
+  /* ── Real-time polling every 60s ── */
   useEffect(() => {
-    const id = setInterval(() => fetchPosts(activeFilter, true), 30000)
+    const id = setInterval(() => fetchPosts(activeFilter, true), 60000)
     return () => clearInterval(id)
   }, [activeFilter, fetchPosts])
 
