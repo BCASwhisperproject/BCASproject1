@@ -247,7 +247,7 @@ export default function PostCard({ post, dbUser, onUpdate, onDelete, inDetail = 
         ) : (
           <>
             <h3 className="font-bold text-[1.05rem] mb-1 leading-snug" style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}>{data.title}</h3>
-            <p className={`text-[.9rem] leading-relaxed ${!inDetail ? 'line-clamp-3' : ''}`} style={{ color: 'var(--text)' }}>{data.body}</p>
+            <p className={`text-[.9rem] leading-relaxed whitespace-pre-wrap break-words ${!inDetail ? 'line-clamp-3' : ''}`} style={{ color: 'var(--text)' }}>{data.body}</p>
           </>
         )}
       </div>
