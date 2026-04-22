@@ -235,7 +235,7 @@ export default function PostCard({ post, dbUser, onUpdate, onDelete, inDetail = 
           <div className="relative">
             <div className="offensive-blur">
               <h3 className="font-bold text-[1.05rem] mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}>{data.title}</h3>
-              <p className="text-[.9rem] leading-relaxed" style={{ color: 'var(--text)' }}>{data.body}</p>
+              <p className="text-[.9rem] leading-relaxed whitespace-pre-wrap break-words" style={{ color: 'var(--text)' }}>{data.body}</p>
             </div>
             <div onClick={() => setShowBlur(false)}
               className="absolute inset-0 flex flex-col items-center justify-center gap-1 cursor-pointer rounded-lg"
