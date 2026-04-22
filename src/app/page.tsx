@@ -70,7 +70,7 @@ export default function FeedPage() {
 
   /* ── Real-time polling every 60s ── */
   useEffect(() => {
-    const id = setInterval(() => fetchPosts(activeFilter, true), 60000)
+    const id = setInterval(() => fetchPosts(activeFilter, true), 120000)
     return () => clearInterval(id)
   }, [activeFilter, fetchPosts])
 
