@@ -50,7 +50,7 @@ export default function FeedPage() {
         : `/api/posts/public?category=${filter}`
 
     const publicRes = await fetch(url, {
-      cache: 'force-cache',
+      cache: 'no-store',
     })
 
     if (!publicRes.ok) return
@@ -115,7 +115,9 @@ export default function FeedPage() {
 
   setFetchLoading(false)
 }, [activeFilter])
-
+  useEffect(() => {
+    fetchPosts(activeFilter)
+    }, [activeFilter, fetchPosts])
   /* ── Real-time polling every 60s ── */
   useEffect(() => {
     const id = setInterval(() => fetchPosts(activeFilter, true), 120000)
@@ -135,9 +137,8 @@ export default function FeedPage() {
 
   /* ── Filter tab ── */
   function handleFilter(cat: string) {
-    setFilter(cat)
-    fetchPosts(cat)
-  }
+  setFilter(cat)
+}
 
   /* ── Post CRUD handlers ── */
   function handleNewPost(post: PostData) {
