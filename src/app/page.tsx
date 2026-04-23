@@ -39,7 +39,8 @@ export default function FeedPage() {
   }, [dbUser, userLoading, router])
 
   /* ── Fetch posts ── */
- const fetchPosts = useCallback(async (filter = activeFilter, silent = false) => {
+
+const fetchPosts = useCallback(async (filter = activeFilter, silent = false) => {
   if (!silent) setFetchLoading(true)
 
   try {
@@ -50,15 +51,17 @@ export default function FeedPage() {
         : `/api/posts/public?category=${filter}`
 
     const publicRes = await fetch(url, {
-      cache: 'no-store',
+      next: { revalidate: 30 },
     })
 
-    if (!publicRes.ok) return
+    if (!publicRes.ok) {
+      setFetchLoading(false)
+      return
+    }
 
     const { posts: raw } = await publicRes.json()
     let list: any[] = raw
 
-    
     if (filter === 'trending') {
       list = [...list]
         .map((p: any) => ({
@@ -68,15 +71,22 @@ export default function FeedPage() {
         .sort((a: any, b: any) => b._score - a._score)
     }
 
-    
-    let mergedPosts: PostData[] = list.map((post: any) => ({
+    const publicPosts: PostData[] = list.map((post: any) => ({
       ...post,
       likedByMe: false,
       myReaction: null,
       comments: [],
     }))
 
-    
+    if (silent && publicPosts.length > prevCountRef.current) {
+      setNewBanner(true)
+    }
+
+    prevCountRef.current = publicPosts.length
+    setPosts(publicPosts)
+    setFiltered(publicPosts)
+    setFetchLoading(false)
+
     if (list.length > 0) {
       const userStateRes = await fetch('/api/posts/user-state', {
         method: 'POST',
@@ -91,37 +101,33 @@ export default function FeedPage() {
         const data = await userStateRes.json()
         const states = data.states || {}
 
-        mergedPosts = list.map((post: any) => ({
+        const enrichedPosts: PostData[] = list.map((post: any) => ({
           ...post,
           likedByMe: states[post.id]?.likedByMe ?? false,
           myReaction: states[post.id]?.myReaction ?? null,
           comments: [],
         }))
+
+        setPosts(enrichedPosts)
+        setFiltered(enrichedPosts)
       }
     }
-
-    
-    if (silent && mergedPosts.length > prevCountRef.current) {
-      setNewBanner(true)
-    }
-
-    prevCountRef.current = mergedPosts.length
-
-    setPosts(mergedPosts)
-    setFiltered(mergedPosts)
   } catch (err) {
     console.error(err)
+    setFetchLoading(false)
   }
 
   setFetchLoading(false)
 }, [activeFilter])
-  useEffect(() => {
-    fetchPosts(activeFilter)
-    }, [activeFilter, fetchPosts])
+
+useEffect(() => {
+  fetchPosts(activeFilter)
+}, [activeFilter, fetchPosts])
+    
   /* ── Real-time polling every 60s ── */
   useEffect(() => {
     const id = setInterval(() => {
-    if (document.visibilityState !== 'visible') return
+      if (document.visibilityState !== 'visible') return
     fetchPosts(activeFilter, true)
   }, 120000)
     return () => clearInterval(id)
