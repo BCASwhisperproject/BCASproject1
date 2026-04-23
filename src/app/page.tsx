@@ -120,7 +120,10 @@ export default function FeedPage() {
     }, [activeFilter, fetchPosts])
   /* ── Real-time polling every 60s ── */
   useEffect(() => {
-    const id = setInterval(() => fetchPosts(activeFilter, true), 120000)
+    const id = setInterval(() => {
+    if (document.visibilityState !== 'visible') return
+    fetchPosts(activeFilter, true)
+  }, 120000)
     return () => clearInterval(id)
   }, [activeFilter, fetchPosts])
 
