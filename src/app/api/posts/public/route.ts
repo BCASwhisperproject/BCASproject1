@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { containsBlocked, DAILY_POST_LIMIT, CATEGORY_LABELS } from '@/lib/utils'
 
-const VALID_CATS = ['GENERAL', 'CONFESSION', 'MEME', 'QUESTION', 'RANT', 'POLL'] as const
+const VALID_CATS = Object.keys(CATEGORY_LABELS)
 
 export const revalidate = 60
 
