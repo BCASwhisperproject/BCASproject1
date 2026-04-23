@@ -17,7 +17,7 @@ export default function PollWidget({ dbUser }: PollWidgetProps) {
 
   const fetchPoll = useCallback(async () => {
     try {
-      const r = await fetch('/api/polls/active')
+      const r = await fetch('/api/polls/active', { cache: 'no-store' })
       if (r.ok) {
         const d = await r.json()
         setPoll(d.poll)
@@ -27,11 +27,20 @@ export default function PollWidget({ dbUser }: PollWidgetProps) {
   }, [])
 
   useEffect(() => {
+  fetchPoll()
+
+  const interval = setInterval(() => {
+    
+    if (document.visibilityState !== 'visible') return
+
+    
+    if (poll?.myVoteOptionId) return
+
     fetchPoll()
-    // Refresh every 30s for live updates
-    const interval = setInterval(fetchPoll, 120000)
-    return () => clearInterval(interval)
-  }, [fetchPoll])
+  }, 180000) // 3 minutes
+
+  return () => clearInterval(interval)
+}, [fetchPoll, poll?.myVoteOptionId])
 
   async function castVote(optionId: string) {
     if (poll?.myVoteOptionId || voting) return
