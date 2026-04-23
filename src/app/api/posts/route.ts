@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
   { posts: formatted, page },
   {
     headers: {
-      "Cache-Control": "private, s-maxage=60, stale-while-revalidate=120",
+      "Cache-Control": "no-store",
     },
   }
 )
