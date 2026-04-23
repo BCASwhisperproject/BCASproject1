@@ -1,6 +1,6 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
+
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDBUser } from '@/hooks/useDBUser'
@@ -39,34 +39,82 @@ export default function FeedPage() {
   }, [dbUser, userLoading, router])
 
   /* ── Fetch posts ── */
-  const fetchPosts = useCallback(async (filter = activeFilter, silent = false) => {
-    if (!silent) setFetchLoading(true)
-    try {
-      const url = (filter === 'all' || filter === 'trending')
-        ? '/api/posts'
-        : `/api/posts?category=${filter}`
-      const r = await fetch(url)
-      if (!r.ok) return
-      const { posts: raw } = await r.json()
-      let list: PostData[] = raw
+ const fetchPosts = useCallback(async (filter = activeFilter, silent = false) => {
+  if (!silent) setFetchLoading(true)
 
-      if (filter === 'trending') {
-        list = [...list]
-          .map((p: any) => ({ ...p, _score: p.likeCount * 2 + p.commentCount * 1.5 }))
-          .sort((a: any, b: any) => b._score - a._score)
+  try {
+   
+    const url =
+      filter === 'all' || filter === 'trending'
+        ? '/api/posts/public'
+        : `/api/posts/public?category=${filter}`
+
+    const publicRes = await fetch(url, {
+      cache: 'force-cache',
+    })
+
+    if (!publicRes.ok) return
+
+    const { posts: raw } = await publicRes.json()
+    let list: any[] = raw
+
+    
+    if (filter === 'trending') {
+      list = [...list]
+        .map((p: any) => ({
+          ...p,
+          _score: p.likeCount * 2 + p.commentCount * 1.5,
+        }))
+        .sort((a: any, b: any) => b._score - a._score)
+    }
+
+    
+    let mergedPosts: PostData[] = list.map((post: any) => ({
+      ...post,
+      likedByMe: false,
+      myReaction: null,
+      comments: [],
+    }))
+
+    
+    if (list.length > 0) {
+      const userStateRes = await fetch('/api/posts/user-state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({
+          postIds: list.map((p: any) => p.id),
+        }),
+      })
+
+      if (userStateRes.ok) {
+        const data = await userStateRes.json()
+        const states = data.states || {}
+
+        mergedPosts = list.map((post: any) => ({
+          ...post,
+          likedByMe: states[post.id]?.likedByMe ?? false,
+          myReaction: states[post.id]?.myReaction ?? null,
+          comments: [],
+        }))
       }
+    }
 
-      if (silent && list.length > prevCountRef.current) setNewBanner(true)
-      prevCountRef.current = list.length
-      setPosts(list)
-      setFiltered(list)
-    } catch (err){
-  console.error(err)
-}
-    setFetchLoading(false)
-  }, [activeFilter])
+    
+    if (silent && mergedPosts.length > prevCountRef.current) {
+      setNewBanner(true)
+    }
 
-  useEffect(() => { if (dbUser?.isApproved || dbUser?.isAdmin) fetchPosts() }, [dbUser])
+    prevCountRef.current = mergedPosts.length
+
+    setPosts(mergedPosts)
+    setFiltered(mergedPosts)
+  } catch (err) {
+    console.error(err)
+  }
+
+  setFetchLoading(false)
+}, [activeFilter])
 
   /* ── Real-time polling every 60s ── */
   useEffect(() => {
