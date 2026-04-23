@@ -12,12 +12,14 @@ export async function GET(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const user = await prisma.user.findUnique({ where: { id: userId } })
-  if (!user?.isApproved && !user?.isAdmin) return NextResponse.json({ error: 'Pending approval' }, { status: 403 })
+  if (!user?.isApproved && !user?.isAdmin) {
+    return NextResponse.json({ error: 'Pending approval' }, { status: 403 })
+  }
 
   const { searchParams } = new URL(req.url)
   const category = searchParams.get('category')
-  const page     = parseInt(searchParams.get('page') ?? '1')
-  const limit    = 30
+  const page = parseInt(searchParams.get('page') ?? '1')
+  const limit = 30
 
   const where = {
     isHidden: false,
@@ -27,40 +29,113 @@ export async function GET(req: NextRequest) {
   const posts = await prisma.post.findMany({
     where,
     orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
-    take: limit, skip: (page - 1) * limit,
-    include: {
-      author:    { select: { id: true, username: true, avatarColor: true, isAdmin: true } },
-      likes:     { select: { userId: true } },
-      reactions: { select: { userId: true, emoji: true } },
-      _count:    { select: { comments: true, likes: true } },
+    take: limit,
+    skip: (page - 1) * limit,
+    select: {
+      id: true,
+      title: true,
+      body: true,
+      category: true,
+      imageUrl: true,
+      isPinned: true,
+      isHot: true,
+      hotScore: true,
+      isHidden: true,
+      adminNote: true,
+      createdAt: true,
+      authorId: true,
+      author: {
+        select: {
+          id: true,
+          username: true,
+          avatarColor: true,
+          isAdmin: true,
+        },
+      },
+      _count: {
+        select: {
+          comments: true,
+          likes: true,
+        },
+      },
     },
   })
 
-  const formatted = posts.map((p: any) => {
-    const reactionMap: Record<string, number> = {}
-    p.reactions.forEach((r: any) => { reactionMap[r.emoji] = (reactionMap[r.emoji] ?? 0) + 1 })
-    return {
-      id: p.id, title: p.title, body: p.body, category: p.category,
-      imageUrl: p.imageUrl, isPinned: p.isPinned, isHot: p.isHot,
-      hotScore: p.hotScore, isHidden: p.isHidden, adminNote: p.adminNote,
-      createdAt: p.createdAt, authorId: p.authorId,
-      authorUsername: p.author.username, authorAvatarColor: p.author.avatarColor,
-      isAdminPost: p.author.isAdmin,
-      likeCount: p._count.likes, commentCount: p._count.comments,
-      likedByMe:  p.likes.some((l: any) => l.userId === userId),
-      myReaction: p.reactions.find((r: any) => r.userId === userId)?.emoji ?? null,
-      reactions:  reactionMap, comments: [],
-    }
-  })
+  const postIds = posts.map((p) => p.id)
 
-  return NextResponse.json(
-  { posts: formatted, page },
-  {
-    headers: {
-      "Cache-Control": "no-store",
-    },
+  if (postIds.length === 0) {
+    return NextResponse.json({ posts: [], page })
   }
-)
+
+  const myLikes = await prisma.postLike.findMany({
+    where: {
+      userId,
+      postId: { in: postIds },
+    },
+    select: {
+      postId: true,
+    },
+  })
+
+  const myReactions = await prisma.postReaction.findMany({
+    where: {
+      userId,
+      postId: { in: postIds },
+    },
+    select: {
+      postId: true,
+      emoji: true,
+    },
+  })
+
+  
+  const reactionGroups = await prisma.postReaction.groupBy({
+    by: ['postId', 'emoji'],
+    where: {
+      postId: { in: postIds },
+    },
+    _count: {
+      emoji: true,
+    },
+  })
+
+  const likedPostIds = new Set(myLikes.map((l) => l.postId))
+  const myReactionMap = new Map(myReactions.map((r) => [r.postId, r.emoji]))
+
+  const reactionCountMap: Record<string, Record<string, number>> = {}
+
+  for (const row of reactionGroups) {
+    if (!reactionCountMap[row.postId]) {
+      reactionCountMap[row.postId] = {}
+    }
+    reactionCountMap[row.postId][row.emoji] = row._count.emoji
+  }
+
+  const formatted = posts.map((p) => ({
+    id: p.id,
+    title: p.title,
+    body: p.body,
+    category: p.category,
+    imageUrl: p.imageUrl,
+    isPinned: p.isPinned,
+    isHot: p.isHot,
+    hotScore: p.hotScore,
+    isHidden: p.isHidden,
+    adminNote: p.adminNote,
+    createdAt: p.createdAt,
+    authorId: p.authorId,
+    authorUsername: p.author.username,
+    authorAvatarColor: p.author.avatarColor,
+    isAdminPost: p.author.isAdmin,
+    likeCount: p._count.likes,
+    commentCount: p._count.comments,
+    likedByMe: likedPostIds.has(p.id),
+    myReaction: myReactionMap.get(p.id) ?? null,
+    reactions: reactionCountMap[p.id] ?? {},
+    comments: [],
+  }))
+
+  return NextResponse.json({ posts: formatted, page })
 }
 
 export async function POST(req: NextRequest) {
