@@ -53,7 +53,14 @@ export async function GET(req: NextRequest) {
     }
   })
 
-  return NextResponse.json({ posts: formatted, page })
+  return NextResponse.json(
+  { posts: formatted, page },
+  {
+    headers: {
+      "Cache-Control": "private, s-maxage=30, stale-while-revalidate=60",
+    },
+  }
+)
 }
 
 export async function POST(req: NextRequest) {
