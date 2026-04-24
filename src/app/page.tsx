@@ -101,15 +101,15 @@ const fetchPosts = useCallback(async (filter = activeFilter, silent = false) => 
         const data = await userStateRes.json()
         const states = data.states || {}
 
-        const enrichedPosts: PostData[] = list.map((post: any) => ({
+        const applyUserState = (prev: PostData[]) =>
+        prev.map((post: any) => ({
           ...post,
-          likedByMe: states[post.id]?.likedByMe ?? false,
-          myReaction: states[post.id]?.myReaction ?? null,
-          comments: [],
+        likedByMe: states[post.id]?.likedByMe ?? post.likedByMe ?? false,
+        myReaction: states[post.id]?.myReaction ?? post.myReaction ?? null,
         }))
 
-        setPosts(enrichedPosts)
-        setFiltered(enrichedPosts)
+setPosts(applyUserState)
+setFiltered(applyUserState)
       }
     }
   } catch (err) {
