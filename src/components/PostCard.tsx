@@ -78,25 +78,37 @@ export default function PostCard({ post, dbUser, onUpdate, onDelete, inDetail = 
 
   /* ── LIKE / REACT ── */
   async function handleLike() {
-    const res = await fetch(`/api/posts/${data.id}/like`, { method: 'POST' })
-    if (!res.ok) return
-    const { likedByMe, likeCount } = await res.json()
-    setData(d => ({ ...d, likedByMe, likeCount }))
-    onUpdate?.({ ...data, likedByMe, likeCount })
-  }
+  const res = await fetch(`/api/posts/${data.id}/like`, { method: 'POST' })
+  if (!res.ok) return
 
-  async function handleReact(emoji: string) {
-    setPickerOpen(false)
-    const res = await fetch(`/api/posts/${data.id}/react`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ emoji }),
-    })
-    if (!res.ok) return
-    const { reactions, myReaction } = await res.json()
-    setData(d => ({ ...d, reactions, myReaction }))
-    onUpdate?.({ ...data, reactions, myReaction })
-  }
+  const { likedByMe, likeCount } = await res.json()
+
+  setData(d => {
+    const updated = { ...d, likedByMe, likeCount }
+    onUpdate?.(updated)
+    return updated
+  })
+}
+
+async function handleReact(emoji: string) {
+  setPickerOpen(false)
+
+  const res = await fetch(`/api/posts/${data.id}/react`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ emoji }),
+  })
+
+  if (!res.ok) return
+
+  const { reactions, myReaction } = await res.json()
+
+  setData(d => {
+    const updated = { ...d, reactions, myReaction }
+    onUpdate?.(updated)
+    return updated
+  })
+}
 
   /* ── DELETE ── */
   async function handleDelete() {
