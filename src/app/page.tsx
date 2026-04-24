@@ -203,7 +203,15 @@ useEffect(() => {
 
           {/* Confession of the Day (top confession by likes) */}
           {(() => {
-            const top = posts.filter((p: any) => p.category === 'confession').sort((a,b) => b.likeCount - a.likeCount)[0]
+            const today = new Date()
+today.setHours(0, 0, 0, 0)
+
+const top = posts
+  .filter((p: any) => {
+    const created = new Date(p.createdAt)
+    return p.category === 'confession' && created >= today
+  })
+  .sort((a, b) => b.likeCount - a.likeCount)[0]
             if (!top) return null
             return (
               <div className="rounded-2xl overflow-hidden cursor-pointer" onClick={() => router.push(`/post/${top.id}`)}
